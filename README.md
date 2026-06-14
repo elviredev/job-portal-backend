@@ -4,7 +4,8 @@
 
 ## 🤖 BACKEND
 ### 👉 Laravel 13
-#### API Laravel 
+### 👉 API Laravel 
+### 👉 BDD MySQL (DBeaver)
 
 <br>
 
