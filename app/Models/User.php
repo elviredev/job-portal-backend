@@ -11,10 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
 #[Fillable(['first_name', 'last_name', 'email', 'password', 'role', 'is_active', 'google_id'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
   /** @use HasFactory<UserFactory> */
   use HasFactory, Notifiable;
@@ -43,6 +44,21 @@ class User extends Authenticatable
   public function jobListings(): HasMany
   {
     return $this->hasMany(JobListing::class, 'user_id');
+  }
+
+  /**
+   * Récupérer l'identifiant qui sera stocké dans la revendication « subject » du JWT.
+   *
+   * @return mixed
+   */
+  public function getJWTIdentifier(): mixed
+  {
+    return $this->getKey();
+  }
+
+  public function getJWTCustomClaims(): array
+  {
+    return [];
   }
 
 }
