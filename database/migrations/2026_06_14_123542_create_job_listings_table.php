@@ -18,7 +18,7 @@ return new class extends Migration {
       $table->string('title', 255);
       $table->string('location', 100);
       $table->enum('location_type', ['remote', 'on_site', 'hybrid']);
-      $table->decimal('min_salary', 10, 2)->nullable();
+      $table->decimal('min_salary', 10, 2);
       $table->decimal('max_salary', 10, 2)->nullable();
       $table->enum('job_type', ['full-time', 'part-time', 'contract', 'internship', 'freelance']);
       $table->enum('level', ['intern', 'junior', 'mid', 'senior', 'lead', 'manager']);
@@ -30,7 +30,7 @@ return new class extends Migration {
       $table->text('company_description')->nullable();
       $table->string('contact_person', 200);
       $table->string('company_email', 255);
-      $table->string('department', 100)->nullable();
+      $table->string('department', 100);
       $table->string('website', 255)->nullable();
 
       $table->timestamps();

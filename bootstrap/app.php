@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     health: '/up',
   )
   ->withMiddleware(function (Middleware $middleware): void {
-    $middleware->prependToGroup('api', AttachJwtFromCookie::class);
+    // $middleware->prependToGroup('api', AttachJwtFromCookie::class);
   })
   ->withExceptions(function (Exceptions $exceptions): void {
     $exceptions->shouldRenderJsonWhen(

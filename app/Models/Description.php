@@ -10,7 +10,7 @@ class Description extends Model
   protected $fillable = [
     'job_listing_id',
     'key_role',
-    'responsibility',
+    'responsability',
     'skill_and_experience',
   ];
 
