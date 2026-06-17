@@ -58,7 +58,13 @@ class User extends Authenticatable implements JWTSubject
 
   public function getJWTCustomClaims(): array
   {
-    return [];
+    return ['role' => $this->role];
+  }
+
+  // pour Google Login car dans notre bdd on a pas de colonne "fullname"
+  public function getFullNameAttribute(): string
+  {
+    return "{$this->first_name} {$this->last_name}";
   }
 
 }

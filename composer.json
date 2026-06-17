@@ -10,6 +10,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "google/apiclient": "2.18",
+        "google/apiclient-services": "^0.445.0",
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
         "php-open-source-saver/jwt-auth": "^2.9"
