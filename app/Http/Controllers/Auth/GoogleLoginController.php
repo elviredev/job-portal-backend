@@ -36,7 +36,7 @@ class GoogleLoginController extends Controller
       ], 401);
     }
 
-    // extract ggogle info
+    // extract google info
     $googleId = $payload['sub'];
     $email = $payload['email'];
     $googleImage = $payload['picture'] ?? null;
@@ -47,16 +47,16 @@ class GoogleLoginController extends Controller
       ->orWhere('email', $email)
       ->first();
 
-    if($user) {
+    if ($user) {
       // security check
-      if($user->role !== $targetRole) {
+      if ($user->role !== $targetRole) {
         return response()->json([
           'error' => "This account is registered as a $user->role. Please use the correct login form.",
         ], 403);
       }
 
       // update google id if it wasn't set yet
-      if(!$user->google_id) {
+      if (!$user->google_id) {
         $user->update(['google_id' => $googleId]);
       }
     } else {
@@ -73,18 +73,18 @@ class GoogleLoginController extends Controller
       ]);
     }
 
-    if(!$user->is_active) {
+    if (!$user->is_active) {
       return response()->json([
         'error' => 'This account is deactivated. Please contact support.',
       ], 403);
     }
 
     // save image
-    if($googleImage) {
+    if ($googleImage) {
       $existingImage = UserImage::where('user_id', $user->id)->first();
 
       // only update if no image
-      if(!$existingImage || str_starts_with($existingImage->image_path, 'http')) {
+      if (!$existingImage || str_starts_with($existingImage->image_path, 'http')) {
         UserImage::updateOrCreate(
           ['user_id' => $user->id],
           ['image_path' => $googleImage]
@@ -114,22 +114,19 @@ class GoogleLoginController extends Controller
         'image' => $image
           ? (str_starts_with($image, 'http')
             ? $image
-            : asset('storage/' . $image))
-          : null
-      ]
+            : asset('storage/'.$image))
+          : null,
+      ],
     ])->cookie(
       'auth_token',
       $token,
-      60 * 24, // 1 day
-      '/', // path
-      null, // domain
-      $isProd, // Secure en localhost (false en local et true en prod => https)
-      true, // HttpOnly
-      false,
-      $isProd ? 'None' : 'Lax' // SameSite en local
+      60 * 24,                      // Minutes
+      '/',                          // Path
+      null,                         // Domain
+      $isProd,                      // Secure en localhost (false en local et true en prod => https)
+      true,                         // HttpOnly (prevent JS access, XSS)
+      false,                        // Raw
+      $isProd ? 'None' : 'Lax'      // SameSite en local (Essential for CSRF protection/auth)
     );
-
   }
-
-
 }

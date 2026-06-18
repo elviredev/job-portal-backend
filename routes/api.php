@@ -10,12 +10,18 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/google-login', [GoogleLoginController::class, 'googleLogin']);
 
+// public routes
+Route::get('jobs', [JobController::class, 'index']);
+
+// routes with jwt auth to verify user
 Route::middleware([AttachJwtFromCookie::class, 'auth:api'])->group(function () {
-  //Route::get('jobs', [JobController::class, 'index']);
+  Route::post('/auth/logout', [AuthController::class, 'logout']);
+  Route::get('/auth/me', [AuthController::class, 'me']);
 
   // recruiter only
   Route::middleware('role:recruiter')->group(function () {
     // all routes for recruiter
+    Route::post('jobs', [JobController::class, 'store']);
   });
 
   // user only
@@ -24,4 +30,3 @@ Route::middleware([AttachJwtFromCookie::class, 'auth:api'])->group(function () {
   });
 });
 
-Route::post('jobs', [JobController::class, 'store']);
