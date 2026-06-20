@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreJobRequest;
+use App\Http\Resources\JobListingResource;
 use App\Models\CompanyLogo;
 use App\Models\Description;
 use App\Models\JobListing;
@@ -12,6 +13,16 @@ class JobController extends Controller
 {
   public function index(Request $request)
   {
+    $request->validate([
+      'per_page' => 'nullable|integer|in:9,18,50,100',
+      'page' => 'nullable|integer|min:1',
+      'keyword' => 'nullable|string|max:255',
+      'location' => 'nullable|string|max:255',
+      'min_salary' => 'nullable|numeric|min:0',
+      'job_type' => 'nullable|string',
+      'location_type' => 'nullable|string',
+    ]);
+
     $query = JobListing::with(['description', 'companyLogo'])->latest('posted_date');
 
     // choix dans la homepage pour choisir le nb de jobs à afficher
@@ -22,22 +33,20 @@ class JobController extends Controller
     // filtres - recherche
     if ($request->filled('keyword')) {
       $query->where(function ($q) use ($request) {
-        $keyword = strtolower($request->keyword);
-        $q->whereRaw('LOWER(title) LIKE ?', ['%'.$keyword.'%'])
-          ->orWhereRaw('LOWER(department) LIKE ?', ['%'.$keyword.'%']);
+        $q->where('title', 'like', '%'.$request->keyword.'%')
+          ->orWhere('department', 'like', '%'.$request->keyword.'%');
       });
     }
 
     if ($request->filled('location')) {
       $query->where(function ($q) use ($request) {
-        $location = strtolower($request->location);
-        $q->whereRaw('LOWER(location) LIKE ?', ['%'.$location.'%'])
-          ->orWhereRaw('LOWER(location_type) LIKE ?', ['%'.$location.'%']);
+        $q->where('location', 'like', '%'.$request->location.'%')
+          ->orWhere('location_type', 'like', '%'.$request->location.'%');
       });
     }
 
     if ($request->filled('min_salary')) {
-      $query->where('min_salary', '>=', $request->min_salary);
+      $query->where('max_salary', '>=', $request->min_salary);
     }
 
     if ($request->filled('job_type')) {
@@ -51,40 +60,16 @@ class JobController extends Controller
     }
 
     $jobs = $query->paginate($perPage);
-    $mapped = $jobs->getCollection()->map(function ($job) {
-      return [
-        'id' => $job->id,
-        'title' => $job->title,
-        'department' => $job->department,
-        'level' => $job->level,
-        'location' => $job->location,
-        'location_type' => $job->location_type,
-        'job_type' => $job->job_type,
-        'posted_date' => $job->posted_date?->format('Y-m-d'),
-        'application_deadline' => $job->application_deadline?->format('Y-m-d'),
-        'min_salary' => $job->min_salary,
-        'max_salary' => $job->max_salary,
-        'company_name' => $job->company_name,
-        'company_email' => $job->company_email,
-        'company_description' => $job->company_description,
-        'website' => $job->website,
-        'contact_person' => $job->contact_person,
-        'description' => $job->description,
-        'company_logo_url' => $job->companyLogo
-          ? url('storage/' .$job->companyLogo->logo_path)
-          : null,
-      ];
-    })->values();
 
     return response()->json([
       'status' => 'success',
-      'data' => $mapped,
+      'data' => JobListingResource::collection($jobs),
       'meta' => [
         'current_page' => $jobs->currentPage(),
         'last_page' => $jobs->lastPage(),
         'total' => $jobs->total(),
         'per_page' => $jobs->perPage(),
-      ]
+      ],
     ], 200);
   }
 

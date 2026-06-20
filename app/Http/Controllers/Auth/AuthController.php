@@ -118,6 +118,7 @@ class AuthController extends Controller
   public function me()
   {
     try {
+      // récupération user via le JWT : laravel lit le cookie auth_token, extrait le JWT, vérifie validité du token, récupère le user associé
       $user = JWTAuth::parseToken()->authenticate();
 
       $user->load('image');
