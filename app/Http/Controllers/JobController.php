@@ -73,7 +73,6 @@ class JobController extends Controller
     ], 200);
   }
 
-
   public function store(StoreJobRequest $request)
   {
     $validated = $request->validated();
@@ -128,6 +127,20 @@ class JobController extends Controller
         'company_logo' => $company_logo,
       ],
     ], 201);
-
   }
+
+  // my jobs for recruiter
+  public function myJobs()
+  {
+    $jobs = JobListing::with(['description', 'companyLogo'])
+      ->where('user_id', auth('api')->id())
+      ->latest()
+      ->get();
+
+    return response()->json([
+      'status' => 'success',
+      'data' => JobListingResource::collection($jobs),
+    ], 200);
+  }
+
 }
