@@ -8,6 +8,7 @@ use App\Models\CompanyLogo;
 use App\Models\Description;
 use App\Models\JobListing;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class JobController extends Controller
 {
@@ -141,6 +142,26 @@ class JobController extends Controller
       'status' => 'success',
       'data' => JobListingResource::collection($jobs),
     ], 200);
+  }
+
+  public function destroy(JobListing $job)
+  {
+    // vérifie si c'est bien le job du user connecté
+    if ($job->user_id !== auth('api')->id()) {
+      abort(403);
+    }
+
+    // suppression du fichier image
+    if ($job->companyLogo?->logo_path) {
+      Storage::disk('public')->delete($job->companyLogo->logo_path);
+    }
+
+    $job->delete();
+
+    return response()->json([
+      'status' => 'success',
+      'message' => 'Job deleted successfully! '
+    ]);
   }
 
 }
