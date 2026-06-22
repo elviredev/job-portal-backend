@@ -25,6 +25,7 @@ Route::middleware([AttachJwtFromCookie::class, 'auth:api'])->group(function () {
     Route::get('my-jobs', [JobController::class, 'myJobs']);
     Route::delete('jobs/{job}', [JobController::class, 'destroy']);
     Route::get('jobs/{job}', [JobController::class, 'show']);
+    Route::put('jobs/{job}', [JobController::class, 'update']);
   });
 
   // user only

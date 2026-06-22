@@ -4,7 +4,6 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use App\Http\Resources\UserResource;
 
 class JobListingResource extends JsonResource
 {
@@ -36,7 +35,7 @@ class JobListingResource extends JsonResource
       'website' => $this->website,
       'contact_person' => $this->contact_person,
 
-      'description' => $this->description,
+      'description' => $this->whenLoaded('description'),
 
       'company_logo_url' => $this->companyLogo
         ? url('storage/'.$this->companyLogo->logo_path)

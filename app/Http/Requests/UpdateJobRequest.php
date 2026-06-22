@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreJobRequest extends FormRequest
+class UpdateJobRequest extends FormRequest
 {
   /**
    * Determine if the user is authorized to make this request.
@@ -29,7 +29,7 @@ class StoreJobRequest extends FormRequest
       'location' => 'required|string|max:100',
       'location_type' => 'required|in:remote,on-site,hybrid',
       'job_type' => 'required|in:full-time,part-time,contract,internship,freelance',
-      'application_deadline' => 'nullable|date',
+      'application_deadline' => 'nullable|date|after_or_equal:today',
       'min_salary' => 'required|numeric|min:0',
       'max_salary' => 'nullable|numeric|min:0|gt:min_salary',
       'company_name' => 'required|string|max:255',
@@ -42,9 +42,7 @@ class StoreJobRequest extends FormRequest
       'key_role' => 'required|string',
       'responsability' => 'required|string',
       'skill_and_experience' => 'required|string',
-
-      // company logo
-      'company_logo' => 'nullable|file|image|mimes:jpeg,png,jpg,webp,avif|max:4048',
     ];
+
   }
 }

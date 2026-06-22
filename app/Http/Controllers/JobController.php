@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreJobRequest;
+use App\Http\Requests\UpdateJobRequest;
 use App\Http\Resources\JobListingResource;
 use App\Models\CompanyLogo;
 use App\Models\Description;
 use App\Models\JobListing;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 class JobController extends Controller
 {
@@ -157,6 +160,80 @@ class JobController extends Controller
       'status' => 'success',
       'data' => new JobListingResource($job),
     ], 200);
+  }
+
+  /**
+   * @throws Throwable
+   */
+  public function update(UpdateJobRequest $request, JobListing $job)
+  {
+    abort_if($job->user_id !== auth('api')->id(), 403);
+
+    $validated = $request->validated();
+
+    // ajouter une transaction pour éviter des incohérences de données
+    // si une erreur survient après la mise à jour du job mais avant celle du logo par ex
+    DB::transaction(function () use ($validated, $job, $request) {
+
+      $job->update([
+        'title' => $validated['title'],
+        'department' => $validated['department'],
+        'level' => $validated['level'],
+        'location' => $validated['location'] ?? null,
+        'location_type' => $validated['location_type'],
+        'job_type' => $validated['job_type'],
+        'application_deadline' => $validated['application_deadline'] ?? null,
+        'min_salary' => $validated['min_salary'],
+        'max_salary' => $validated['max_salary'] ?? null,
+        'company_name' => $validated['company_name'],
+        'website' => $validated['website'] ?? null,
+        'contact_person' => $validated['contact_person'],
+        'company_email' => $validated['company_email'],
+        'company_description' => $validated['company_description'] ?? null,
+      ]);
+
+      // update description linked to this job
+      $job->description()->updateOrCreate(
+        ['job_listing_id' => $job->id],
+        [
+          'key_role' => $validated['key_role'],
+          'responsability' => $validated['responsability'],
+          'skill_and_experience' => $validated['skill_and_experience'],
+        ]
+      );
+
+      // update company logo
+      $logo = $job->companyLogo;
+      if ($request->hasFile('company_logo')) {
+
+        if ($logo) {
+          // Supprime l'ancien fichier physique
+          Storage::disk('public')->delete($logo->logo_path);
+        }
+
+        $file = $request->file('company_logo');
+
+        // Met à jour l'enregistrement existant ou en créé un si aucun logo existant
+        $job->companyLogo()->updateOrCreate(
+          ['job_listing_id' => $job->id],
+          [
+            'original_name' => $file->getClientOriginalName(),
+            'logo_path' => $file->store('company_logos', 'public'),
+          ]
+        );
+
+      }
+    });
+
+    // reload relationships
+    $job->load(['description', 'companyLogo']);
+
+    return response()->json([
+      'status' => 'success',
+      'message' => 'Job listing updated successfully!',
+      'data' => new JobListingResource($job),
+    ], 200);
+
   }
 
   public function destroy(JobListing $job)
