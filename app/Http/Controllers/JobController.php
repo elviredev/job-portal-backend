@@ -144,6 +144,21 @@ class JobController extends Controller
     ], 200);
   }
 
+  public function show(JobListing $job)
+  {
+    // vérifie que le propriétaire est bien le user connecté
+    abort_if($job->user_id !== auth('api')->id(), 403);
+
+    // charge les relations nécessairees
+    $job->load(['description', 'companyLogo', 'user']);
+
+    // retourner la resource
+    return response()->json([
+      'status' => 'success',
+      'data' => new JobListingResource($job),
+    ], 200);
+  }
+
   public function destroy(JobListing $job)
   {
     // vérifie si c'est bien le job du user connecté
@@ -160,7 +175,7 @@ class JobController extends Controller
 
     return response()->json([
       'status' => 'success',
-      'message' => 'Job deleted successfully! '
+      'message' => 'Job deleted successfully! ',
     ]);
   }
 
