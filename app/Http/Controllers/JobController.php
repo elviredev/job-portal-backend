@@ -150,7 +150,7 @@ class JobController extends Controller
   /** public show job by id */
   public function showPublic(JobListing $job)
   {
-    $job->load(['description', 'companyLogo', 'user']);
+    $job->load(['description', 'companyLogo']);
 
     // dd((new JobListingResource($job))->toArray(request()));
     return response()->json([

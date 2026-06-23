@@ -11,22 +11,15 @@ class SavedJobController extends Controller
 {
   public function checkApplied($jobId)
   {
-    try {
-      // récupérer user authentifié
-      $user = JWTAuth::parseToken()->authenticate();
+    // récupérer user authentifié
+    $user = auth()->user();
 
-      $applied = AppliedJob::where('user_id', $user->id)
-        ->where('job_id', $jobId)
-        ->exists();
+    $applied = AppliedJob::where('user_id', $user->id)
+      ->where('job_id', $jobId)
+      ->exists();
 
-      return response()->json([
-        'applied' => $applied,
-      ]);
-
-    } catch (Exception $e) {
-      return response()->json([
-        'applied' => false,
-      ]);
-    }
+    return response()->json([
+      'applied' => $applied,
+    ]);
   }
 }
