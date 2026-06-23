@@ -17,6 +17,7 @@ Route::get('jobs', [JobController::class, 'index']);
 Route::middleware([AttachJwtFromCookie::class, 'auth:api'])->group(function () {
   Route::post('/auth/logout', [AuthController::class, 'logout']);
   Route::get('/auth/me', [AuthController::class, 'me']);
+  Route::post('/auth/update-profile', [AuthController::class, 'updateProfile']);
 
   // recruiter only
   Route::middleware('role:recruiter')->group(function () {

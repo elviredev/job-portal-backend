@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\User;
+use App\Models\UserImage;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
@@ -118,7 +121,7 @@ class AuthController extends Controller
   public function me()
   {
     try {
-      // récupération user via le JWT : laravel lit le cookie auth_token, extrait le JWT, vérifie validité du token, récupère le user associé
+      // récupération user via le JWT : laravel lit le cookie "auth_token", extrait le JWT, vérifie validité du token, récupère le user associé
       $user = JWTAuth::parseToken()->authenticate();
 
       $user->load('image');
@@ -158,5 +161,83 @@ class AuthController extends Controller
     } catch(Exception $e) {
       return response()->json(['error' => 'Could not log out'], 500);
     }
+  }
+
+  public function updateProfile(Request $request)
+  {
+    try {
+      // récupérer user authentifié
+      $user = JWTAuth::parseToken()->authenticate();
+
+      $validator = Validator::make($request->all(), [
+        'first_name' => 'sometimes|string|max:255',
+        'last_name' => 'sometimes|string|max:255',
+        'image' => 'sometimes|image|mimetypes:image/jpeg,image/png,image/webp,image/avif|max:4096',
+        'google_image_url' => 'nullable|url'
+      ]);
+
+      if ($validator->fails()) {
+        return response()->json([
+          'message' => $validator->errors()->first()
+        ], 422);
+      }
+
+      // update name
+      if ($request->filled('first_name')) $user->first_name = $request->first_name;
+      if ($request->filled('last_name')) $user->last_name = $request->last_name;
+      $user->save();
+
+      // update image
+      if ($request->hasFile('image')) {
+        $file = $request->file('image');
+        $path = $file->store('profile_images', 'public');
+
+        // if image exists
+        $this->deletingExistingImage($user);
+
+        UserImage::updateOrCreate(
+          ['user_id' => $user->id],
+          ['image_path' => $path]
+        );
+      } elseif ($request->filled('google_image_url')) {
+        $this->deletingExistingImage($user);
+
+        UserImage::updateOrCreate(
+          ['user_id' => $user->id],
+          ['image_path' => $request->google_image_url]
+        );
+      }
+
+      $user->load('image');
+
+      return response()->json([
+        'status' => 'success',
+        'message' => 'Profile updated successfully',
+        'user' => new UserResource($user)
+      ]);
+
+    } catch (Exception $e) {
+      return response()->json(['message' => 'Unauthorized'], 401);
+    }
+  }
+
+  /**
+   * @desc Suppression de l'image existante
+   * @param User $user
+   * @return void
+   */
+  private function deletingExistingImage(User $user): void
+  {
+    $existingImage = UserImage::where('user_id', $user->id)->first();
+
+    if (!$existingImage) {
+      return;
+    }
+
+    if (!str_starts_with($existingImage->image_path, 'http')) {
+      Storage::disk('public')->delete($existingImage->image_path);
+    }
+
+    $existingImage->delete();
   }
 }
