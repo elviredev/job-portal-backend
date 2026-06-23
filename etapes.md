@@ -204,12 +204,12 @@ composer require google/apiclient
 - Mettre à jour **"Edit.jsx"**
 
 ## Étape 21 🗄️ : Update Job
-- Créer la route `"update()"` dans api.php
+- Créer la route "**update**" dans api.php
 - Créer "**UpdateStoreRequest**" pour gérer la validation des champs
 - Créer la méthode `"update()"` dans JobController
 
 ## Étape 22 🗄️ : Update profile côté backend
-- Créer la route `"updateProfile()"` dans api.php
+- Créer la route "**updateProfile**" dans api.php
 - Créer la méthode `"updateProfile()"` dans "**AuthController**"
 - Créer une méthode privée `deleteExistingImage()` pour éviter de dupliquer le code pour gérer la suppression de l'image existante
 - Mettre à jour "**UserResource**" pour ajouter des infos 
@@ -217,8 +217,22 @@ composer require google/apiclient
 ## Étape 23 📱 : Update profile côté frontend
 - Implémenter **"EditedProfile.jsx"**
 
-## Étape 24 🗄️ :
+## Étape 24 🗄️ : Job Details côté backend
+- Créer la route publique `"showPublic"` dans api.php
+- Créer la méthode `"showPublic()"` dans "**JobController**"
 
+## Étape 25 📱 : Job Details côté frontend
+- Implémenter **"JobDetails.jsx"**
+- Ajouter la méthode `getDaysAgo()` dans formatter.js
+- Vérifier le statut "**applied**" pour afficher si un job a été postulé par un candidat. Implémenter la méthode `checkIfApplied()`
+
+## Étape 26 🗄️ : Check Applied Status
+- Créer la route **"checkApplied"** dans api.php. Cette route est accessible uniquement aux utilisateurs, pas aux recruteurs.
+- Créer le controller "**SavedJobController**"
+- Créer la méthode `"checkApplied()"` dans "**SavedJobController**"
+
+
+## Étape 27 📱 : Recruiter Signup (hors compte Google)
 
 
 // 6:50:37

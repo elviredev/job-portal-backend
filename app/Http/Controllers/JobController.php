@@ -147,6 +147,18 @@ class JobController extends Controller
     ], 200);
   }
 
+  /** public show job by id */
+  public function showPublic(JobListing $job)
+  {
+    $job->load(['description', 'companyLogo', 'user']);
+
+    // dd((new JobListingResource($job))->toArray(request()));
+    return response()->json([
+      'status' => 'success',
+      'data' => new JobListingResource($job),
+    ], 200);
+  }
+
   public function show(JobListing $job)
   {
     // vérifie que le propriétaire est bien le user connecté
@@ -162,9 +174,7 @@ class JobController extends Controller
     ], 200);
   }
 
-  /**
-   * @throws Throwable
-   */
+  /** @throws Throwable */
   public function update(UpdateJobRequest $request, JobListing $job)
   {
     abort_if($job->user_id !== auth('api')->id(), 403);

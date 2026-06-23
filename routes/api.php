@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\SavedJobController;
 use App\Http\Middleware\AttachJwtFromCookie;
 use Illuminate\Support\Facades\Route;
 
@@ -12,6 +13,7 @@ Route::post('/auth/google-login', [GoogleLoginController::class, 'googleLogin'])
 
 // public routes
 Route::get('jobs', [JobController::class, 'index']);
+Route::get('public-job/{job}', [JobController::class, 'showPublic']);
 
 // routes with jwt auth to verify user
 Route::middleware([AttachJwtFromCookie::class, 'auth:api'])->group(function () {
@@ -32,6 +34,7 @@ Route::middleware([AttachJwtFromCookie::class, 'auth:api'])->group(function () {
   // user only
   Route::middleware('role:user')->group(function () {
     // all routes for user
+    Route::get('appliedJob/check/{jobId}', [SavedJobController::class, 'checkApplied']);
   });
 });
 
