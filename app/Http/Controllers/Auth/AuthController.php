@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\UserImage;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -20,47 +21,31 @@ class AuthController extends Controller
   {
     // validate request data
     $validator = Validator::make($request->all(), [
-      'firstName' => 'required|string|max:255',
-      'lastName' => 'required|string|max:255',
-      'email' => 'required|email|unique:users,email',
+      'first_name' => 'required|string|max:255',
+      'last_name' => 'required|string|max:255',
+      'email' => 'required|string|email:rfc|max:255|unique:users,email',
       'password' => 'required|confirmed|min:8',
-      'role' => 'required|in:admin,user,recruiter',
+      'role' => 'required|in:user,recruiter',
     ]);
 
     if ($validator->fails()) {
-      return response()->json($validator->errors(), 422);
+      return response()->json([
+        'errors' => $validator->errors()
+      ], 422);
     }
     // create user in database
     $user = User::create([
-      'first_name' => $request->firstName,
-      'last_name' => $request->lastName,
+      'first_name' => $request->first_name,
+      'last_name' => $request->last_name,
       'email' => $request->email,
       'password' => Hash::make($request->password),
       'role' => $request->role,
     ]);
 
-    // generate JWT token
-    $token = JWTAuth::fromUser($user);
-
-    // define environnment prod
-    $isProd = app()->environment('production');
-
-    $cookie = cookie([
-      'auth_token',
-      $token,
-      60 * 24,                      // Minutes
-      '/',                          // Path
-      null,                         // Domain
-      $isProd,                      // Secure en localhost (false en local et true en prod => https)
-      true,                         // HttpOnly (prevent JS access, XSS)
-      false,                        // Raw
-      $isProd ? 'None' : 'Lax',     // SameSite en local (Essential for CSRF protection/auth)
-    ]);
-
     return response()->json([
       'message' => 'User registered successfully',
       'user' => $user,
-    ], 201)->withCookie($cookie);
+    ], 201);
   }
 
   public function login(Request $request)
@@ -91,12 +76,14 @@ class AuthController extends Controller
       ], 403);
     }
 
+    // generate JWT token
     $token = JWTAuth::fromUser($user);
 
     // define environnment prod
     $isProd = app()->environment('production');
 
-    $cookie = cookie([
+    // poser un cookie
+    $cookie = Cookie::make(
       'auth_token',
       $token,
       60 * 24,                      // Minutes
@@ -106,7 +93,7 @@ class AuthController extends Controller
       true,                         // HttpOnly (prevent JS access, XSS)
       false,                        // Raw
       $isProd ? 'None' : 'Lax',     // SameSite en local (Essential for CSRF protection/auth)
-    ]);
+    );
 
     return response()->json([
       'success' => 'You are logged successfully',
