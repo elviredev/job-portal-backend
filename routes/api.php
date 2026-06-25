@@ -34,6 +34,7 @@ Route::middleware([AttachJwtFromCookie::class, 'auth:api'])->group(function () {
   // user only
   Route::middleware('role:user')->group(function () {
     // all routes for user
+    Route::post('applied-jobs', [SavedJobController::class, 'apply']);
     Route::get('applied-jobs/check/{job}', [SavedJobController::class, 'checkApplied']);
   });
 });

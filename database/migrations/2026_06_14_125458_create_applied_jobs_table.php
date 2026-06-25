@@ -20,7 +20,7 @@ return new class extends Migration {
       $table->string('linkedin')->nullable();
       $table->text('resume')->nullable();
       $table->enum('status', ['applied', 'accepted', 'rejected', 'expired'])->default('applied');
-      $table->unique(['job_id', 'user_id']); // prevent duplicate applications
+      $table->unique(['job_id', 'user_id']); // même si deux requêtes arrivent simultanément, MySQL empêchera le doublon de candidature.
       $table->timestamps();
     });
   }
