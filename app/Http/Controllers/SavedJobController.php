@@ -6,6 +6,7 @@ use App\Http\Requests\ApplyJobRequest;
 use App\Http\Resources\AppliedJobResource;
 use App\Models\AppliedJob;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class SavedJobController extends Controller
@@ -79,5 +80,53 @@ class SavedJobController extends Controller
     return response()->json([
       'applied' => $applied,
     ]);
+  }
+
+  /**
+   * @desc Récupérer les candidatures d'un user connecté
+   * @return JsonResponse
+   */
+  public function getAppliedJobs()
+  {
+    // on utilise auth()->id() car on a besoin que de l'id du user
+    $applications = AppliedJob::with(['job.companyLogo'])
+      ->where('user_id', auth()->id())
+      ->latest()
+      ->get();
+
+    return response()->json([
+      'status' => 'success',
+      'data' => AppliedJobResource::collection($applications)
+    ], 200);
+  }
+
+  /**
+   * @desc Supprimer une candidature
+   * @param $id
+   * @return JsonResponse
+   */
+  public function destroy($id)
+  {
+    $application = AppliedJob::where('id', $id)
+      ->where('user_id', auth()->id())
+      ->firstOrFail();
+
+    if (!$application) {
+      return response()->json([
+        'message' => 'Application not found',
+      ], 404);
+    }
+
+    // delete resume file if exists
+    if ($application->resume) {
+      Storage::disk('public')->delete($application->resume);
+    }
+
+    $application->delete();
+
+    return response()->json([
+      'status' => 'success',
+      'message' => 'Application deleted successfully',
+    ], 200);
   }
 }

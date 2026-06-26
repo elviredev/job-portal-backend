@@ -34,6 +34,8 @@ class AppliedJobResource extends JsonResource
 
       'status' => $this->status,
       'created_at' => $this->created_at?->toISOString(),
+
+      'job' => new JobListingResource($this->whenLoaded('job')),
     ];
   }
 }
