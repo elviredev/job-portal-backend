@@ -4,13 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreJobRequest;
 use App\Http\Requests\UpdateJobRequest;
+use App\Http\Resources\AppliedJobResource;
 use App\Http\Resources\JobListingResource;
+use App\Models\AppliedJob;
 use App\Models\CompanyLogo;
 use App\Models\Description;
 use App\Models\JobListing;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Throwable;
 
 class JobController extends Controller
@@ -263,6 +267,69 @@ class JobController extends Controller
     return response()->json([
       'status' => 'success',
       'message' => 'Job deleted successfully! ',
+    ]);
+  }
+
+  /**
+   * @desc Récupérer les candidatures du recruteur
+   * @return JsonResponse
+   */
+  public function getApplications()
+  {
+    $user = auth()->user();
+
+    // récupérer uniquement les candidatures dont le job appartient au recruteur connecté
+    $applications = AppliedJob::with(['job'])
+      ->whereHas('job', function ($query) use ($user) {
+        $query->where('user_id', $user->id);
+      })
+      ->latest()
+      ->get();
+
+    return response()->json([
+      'status' => 'success',
+      'data' => AppliedJobResource::collection($applications),
+    ], 200);
+  }
+
+  public function updateStatus(Request $request, AppliedJob $application)
+  {
+    $validator = Validator::make($request->all(), [
+      'status' => 'required|in:accepted,rejected',
+    ]);
+
+    if ($validator->fails()) {
+      return response()->json([
+        'status' => 'error',
+        'message' => $validator->errors()->first(),
+        'errors' => $validator->errors(),
+      ], 422);
+    }
+
+    // find application by recruteur connecté and job
+    $application = AppliedJob::whereHas('job', function ($query) {
+      $query->where('user_id', auth()->id());
+    })->findOrFail($application->id);
+
+    // empêcher une 2ème validation
+    if(in_array($application->status, ['accepted', 'rejected'])) {
+      return response()->json([
+        'status' => 'error',
+        'message' => 'This application has already been processed.',
+      ], 409);
+    }
+
+    // update status
+    $application->update([
+      'status' => $request->status,
+    ]);
+
+    $application->load('job');
+
+    return response()->json([
+      'status' => 'success',
+      'message' => "Application $request->status.",
+      'data' => new AppliedJobResource($application),
     ]);
   }
 

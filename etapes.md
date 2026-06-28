@@ -263,13 +263,21 @@ composer require google/apiclient
 - Créer la route GET **"applied-jobs"** et DELETE **"applied-jobs/{id}"** dans api.php.
 - Créer les méthodes `getAppliedJobs()` et `destroy()` dans "**SavedJobController**"
 
-## Étape 32 📱 : Applied Job Listings côté frontend
+## Étape 34 📱 : Applied Job Listings côté frontend
 - Implémenter **"AppliedJobListings.jsx"**
 
+## Étape 35 🗄️ : View Applications côté backend
+- Créer les routes GET "**applications**" et PATCH "**applications/{application}/status**"
+- Créer les méthodes `getApplications()` et `updateStatus()` dans "**JobController**"
+
+## Étape 36 📱 : View Applications côté frontend
+- Implémenter "**ViewApplications.jsx**"
+- Créer le component "**DropdownAction.jsx**"
 
 
 
-// 8:36:58
+
+
 
 
 
